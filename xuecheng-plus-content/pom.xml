@@ -9,8 +9,8 @@
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../xuecheng-plus-parent</relativePath>
     </parent>
-    <packaging>pom</packaging>
     <artifactId>xuecheng-plus-content</artifactId>
+    <packaging>pom</packaging>
     <modules>
         <module>xuecheng-plus-content-api</module>
         <module>xuecheng-plus-content-model</module>
