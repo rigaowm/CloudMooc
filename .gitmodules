@@ -1,0 +1,3 @@
+[submodule "xuecheng-plus-parent"]
+    path = xuecheng-plus-parent
+    url = http://192.168.101.65:10880/xuecheng-plus/xuecheng-plus-parent.git
