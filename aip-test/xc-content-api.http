@@ -1,0 +1,9 @@
+###
+POST http://localhost:13040/content/course/list?pageNo=1&pageSize=2
+Content-Type: application/json
+
+{
+    "auditStatus": "202004",
+    "courseName": "java",
+    "publishStatus": ""
+}

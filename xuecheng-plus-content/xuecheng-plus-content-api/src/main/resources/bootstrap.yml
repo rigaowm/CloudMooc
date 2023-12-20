@@ -1,7 +1,7 @@
 server:
   servlet:
     context-path: /content
-  port: 8888
+  port: 13040
 #微服务配置
 spring:
   application:
