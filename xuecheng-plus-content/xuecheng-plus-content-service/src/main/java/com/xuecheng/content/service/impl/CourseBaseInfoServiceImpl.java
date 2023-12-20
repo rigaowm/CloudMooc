@@ -1,4 +1,4 @@
-package com.xuecheng.content;
+package com.xuecheng.content.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -7,37 +7,35 @@ import com.xuecheng.base.model.PageResult;
 import com.xuecheng.content.mapper.CourseBaseMapper;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
+import com.xuecheng.content.service.CourseBaseInfoService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.stereotype.Service;
 
 /**
  * @Author Rigao
- * @Title: CourseBaseMapperTests
- * @Date: 2023/12/20 15:37
+ * @Title: CourseBaseInfoServiceImpl
+ * @Date: 2023/12/20 17:01
  * @Version 1.0
- * @Description:
+ * @Description: 课程信息管理
  */
 
-@SpringBootTest
-public class CourseBaseMapperTests {
+@Slf4j
+@Service
+public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
     @Autowired
     private CourseBaseMapper courseBaseMapper;
 
-    @Test
-    public void testCourseBaseMapper(){
-        QueryCourseParamsDto queryCourseParamsDto = new QueryCourseParamsDto();
-        queryCourseParamsDto.setCourseName("java");
+    @Override
+    public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
 
         LambdaQueryWrapper<CourseBase> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(queryCourseParamsDto.getCourseName()),CourseBase::getName,queryCourseParamsDto.getCourseName());
-        lambdaQueryWrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getAuditStatus()),CourseBase::getStatus,queryCourseParamsDto.getAuditStatus());
+        lambdaQueryWrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getAuditStatus()),CourseBase::getAuditStatus,queryCourseParamsDto.getAuditStatus());
+        lambdaQueryWrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getPublishStatus()),CourseBase::getStatus,queryCourseParamsDto.getPublishStatus());
 
-        PageParams pageParams = new PageParams();
-        pageParams.setPageNo(1L);
-        pageParams.setPageSize(2L);
 
         Page<CourseBase> page = new Page<>(pageParams.getPageNo(),pageParams.getPageSize());
         courseBaseMapper.selectPage(page,lambdaQueryWrapper);
@@ -48,10 +46,6 @@ public class CourseBaseMapperTests {
         pageResult.setPage(pageParams.getPageNo());
         pageResult.setPageSize(pageParams.getPageSize());
 
-        System.out.println(pageResult);
-
+        return pageResult;
     }
-
-
-
 }
