@@ -10,6 +10,7 @@ import com.xuecheng.content.mapper.CourseCategoryMapper;
 import com.xuecheng.content.mapper.CourseMarketMapper;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
+import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
 import com.xuecheng.content.model.po.CourseCategory;
@@ -136,6 +137,9 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
         courseBaseInfoDto.setStName(ccSt.getName());
         return courseBaseInfoDto;
     }
+
+
+
     private int saveCourseMarket(CourseMarket courseMarketNew){
         String charge = courseMarketNew.getCharge();
         if(StringUtils.isBlank(charge)){
@@ -158,5 +162,35 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
     }
 
+    @Override
+    public CourseBaseInfoDto updateCourseBase(Long companyId, EditCourseDto dto) {
+        Long id = dto.getId();
+        CourseBase courseBase = courseBaseMapper.selectById(id);
+        if(courseBase == null){
+            XueChengPlusException.cast("课程信息不存在");
+        }
+        //合法性校验
+        //只有本机构可以修改本课程的信息
+        Long companyIdDto = courseBase.getCompanyId();
+        if(!companyId.equals(companyIdDto)){
+            XueChengPlusException.cast("只有本机构可以修改本课程的信息");
+        }
+        BeanUtils.copyProperties(dto,courseBase);
+        courseBase.setChangeDate(LocalDateTime.now());
+        int i = courseBaseMapper.updateById(courseBase);
+        if(i<=0){
+            XueChengPlusException.cast("更新失败");
+        }
+        CourseMarket courseMarket = new CourseMarket();
+        BeanUtils.copyProperties(dto,courseMarket);
+        courseMarket.setId(id);
+        i = courseMarketMapper.updateById(courseMarket);
+        if(i<=0){
+            XueChengPlusException.cast("营销信息更新失败");
+        }
+        CourseBaseInfoDto courseBaseInfo = getCourseBaseInfo(id);
+
+        return courseBaseInfo;
+    }
 
 }

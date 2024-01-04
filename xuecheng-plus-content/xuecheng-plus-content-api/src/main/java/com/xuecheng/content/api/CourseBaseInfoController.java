@@ -1,9 +1,11 @@
 package com.xuecheng.content.api;
 
+import com.xuecheng.base.exception.ValidationGroups;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
+import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.po.CourseBase;
 import com.xuecheng.content.service.CourseBaseInfoService;
@@ -34,7 +36,7 @@ public class CourseBaseInfoController {
 
     @ApiOperation("课程添加")
     @PostMapping("/course")
-    public CourseBaseInfoDto createCourseBase(@RequestBody @Validated AddCourseDto addCourseDto){
+    public CourseBaseInfoDto createCourseBase(@RequestBody @Validated(ValidationGroups.Insert.class) AddCourseDto addCourseDto){
         Long companyId = 1232141425L;
         CourseBaseInfoDto courseBase = courseBaseInfoService.createCourseBase(companyId, addCourseDto);
         return courseBase;
@@ -44,6 +46,15 @@ public class CourseBaseInfoController {
     @GetMapping("/course/{courseId}")
     public CourseBaseInfoDto  getCourseBaseById(@PathVariable Long courseId){
         return courseBaseInfoService.getCourseBaseInfo(courseId);
+    }
+
+
+    @ApiOperation("课程信息修改接口")
+    @PutMapping("/course")
+    public CourseBaseInfoDto modifyCourseBase(@RequestBody @Validated(ValidationGroups.Update.class) EditCourseDto editCourseDto){
+        Long companyId = 1232141425L;
+        CourseBaseInfoDto courseBase = courseBaseInfoService.updateCourseBase(companyId, editCourseDto);
+        return courseBase;
     }
 
 }
