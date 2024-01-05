@@ -45,3 +45,17 @@ Content-Type: application/json
 ### 查询课程计划信息
 GET {{content_host}}/content/teachplan/117/tree-nodes
 Content-Type: application/json
+
+### 修改教师信息
+PUT {{content_host}}/content/courseTeacher
+Content-Type: application/json
+
+{
+  "id": 27,
+  "courseId": 2,
+  "teacherName": "王老师",
+  "position": "教师职位",
+  "introduction": "教师简介",
+  "photograph": null,
+  "createDate": null
+}

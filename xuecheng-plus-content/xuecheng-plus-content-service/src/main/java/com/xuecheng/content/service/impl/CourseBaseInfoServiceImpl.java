@@ -5,16 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xuecheng.base.exception.XueChengPlusException;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
-import com.xuecheng.content.mapper.CourseBaseMapper;
-import com.xuecheng.content.mapper.CourseCategoryMapper;
-import com.xuecheng.content.mapper.CourseMarketMapper;
+import com.xuecheng.content.mapper.*;
 import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseInfoDto;
 import com.xuecheng.content.model.dto.EditCourseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
-import com.xuecheng.content.model.po.CourseBase;
-import com.xuecheng.content.model.po.CourseCategory;
-import com.xuecheng.content.model.po.CourseMarket;
+import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.CourseBaseInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -43,6 +39,11 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     private CourseMarketMapper courseMarketMapper;
     @Autowired
     private CourseCategoryMapper courseCategoryMapper;
+
+    @Autowired
+    private CourseTeacherMapper courseTeacherMapper;
+    @Autowired
+    private TeachplanMapper teachplanMapper;
     @Override
     public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
 
@@ -192,5 +193,31 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
 
         return courseBaseInfo;
     }
+
+    @Transactional
+    @Override
+    public void deleteCourseBase(Long id) {
+        CourseBase courseBase = courseBaseMapper.selectById(id);
+        if(courseBase == null){
+            XueChengPlusException.cast("课程信息不存在");
+        }
+        String auditStatus = courseBase.getAuditStatus();
+        if(!"202002".equals(auditStatus)){
+            XueChengPlusException.cast("课程已经审核通过，不能删除");
+        }
+        int i = courseBaseMapper.deleteById(id);
+        if(i<= 0){
+            XueChengPlusException.cast("课程信息删除失败");
+        }
+        courseMarketMapper.deleteById(id);
+        LambdaQueryWrapper<Teachplan> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Teachplan::getCourseId,id);
+        teachplanMapper.delete(queryWrapper);
+        LambdaQueryWrapper<CourseTeacher> query = new LambdaQueryWrapper<>();
+        query.eq(CourseTeacher::getCourseId,id);
+        courseTeacherMapper.delete(query);
+
+    }
+
 
 }
