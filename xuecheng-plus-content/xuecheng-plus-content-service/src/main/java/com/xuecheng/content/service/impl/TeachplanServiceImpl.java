@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xuecheng.base.exception.XueChengPlusException;
 import com.xuecheng.content.mapper.TeachplanMapper;
 import com.xuecheng.content.mapper.TeachplanMediaMapper;
+import com.xuecheng.content.model.dto.BindTeachplanMediaDto;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.model.po.Teachplan;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -130,6 +132,48 @@ public class TeachplanServiceImpl implements TeachplanService {
         teachplan.setOrderby(orderbyMove);
         teachplanMapper.updateById(teachplan);
         teachplanMapper.updateById(teachplanMove);
+
+    }
+
+    @Transactional
+    @Override
+    public TeachplanMedia associationMedia(BindTeachplanMediaDto bindTeachplanMediaDto) {
+        LambdaQueryWrapper<TeachplanMedia> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TeachplanMedia::getTeachplanId,bindTeachplanMediaDto.getTeachplanId());
+        int delete = teachplanMediaMapper.delete(queryWrapper);
+
+        Long teachplanId = bindTeachplanMediaDto.getTeachplanId();
+        Teachplan teachplan = teachplanMapper.selectById(teachplanId);
+        if(teachplan==null){
+            XueChengPlusException.cast("教学计划不存在");
+        }
+        Integer grade = teachplan.getGrade();
+        if(grade!=2){
+            XueChengPlusException.cast("只允许第二级教学计划绑定媒资文件");
+        }
+
+
+        TeachplanMedia teachplanMedia = new TeachplanMedia();
+        BeanUtils.copyProperties(bindTeachplanMediaDto,teachplanMedia);
+        teachplanMedia.setCourseId(teachplan.getCourseId());
+        teachplanMedia.setCreateDate(LocalDateTime.now());
+        teachplanMedia.setMediaFilename(bindTeachplanMediaDto.getFileName());
+        int insert = teachplanMediaMapper.insert(teachplanMedia);
+        if(insert<=0){
+            XueChengPlusException.cast("添加视频失败");
+        }
+        return teachplanMedia;
+    }
+
+    @Override
+    public void deleteMedia(String teachPlanId, String mediaId) {
+        LambdaQueryWrapper<TeachplanMedia> query = new LambdaQueryWrapper<>();
+        query.eq(TeachplanMedia::getTeachplanId,teachPlanId);
+        query.eq(TeachplanMedia::getMediaId,mediaId);
+        int delete = teachplanMediaMapper.delete(query);
+        if(delete<=0){
+            XueChengPlusException.cast("删除失败");
+        }
 
     }
 }
