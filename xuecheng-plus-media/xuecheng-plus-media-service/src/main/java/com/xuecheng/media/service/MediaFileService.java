@@ -80,4 +80,5 @@ public interface MediaFileService {
 
  public String getFilePathByMd5(String fileMd5,String fileExt);
 
+ public MediaFiles getFileById(String mediaId);
 }
