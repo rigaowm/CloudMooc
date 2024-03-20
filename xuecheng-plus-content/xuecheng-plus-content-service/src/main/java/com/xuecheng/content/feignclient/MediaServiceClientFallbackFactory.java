@@ -1,0 +1,29 @@
+package com.xuecheng.content.feignclient;
+
+import feign.hystrix.FallbackFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+/**
+ * @Author Rigao
+ * @Title: MediaServiceClientFallbackFactory
+ * @Date: 2024/2/20 19:37
+ * @Version 1.0
+ * @Description:
+ */
+
+@Slf4j
+@Component
+public class MediaServiceClientFallbackFactory implements FallbackFactory<MediaServiceClient> {
+    @Override
+    public MediaServiceClient create(Throwable cause) {
+        return new MediaServiceClient() {
+            @Override
+            public String upload(MultipartFile filedata, String objectName) {
+                log.debug("远程信息调用发生熔断：{}",cause.toString(),cause);
+                return null;
+            }
+        };
+    }
+}

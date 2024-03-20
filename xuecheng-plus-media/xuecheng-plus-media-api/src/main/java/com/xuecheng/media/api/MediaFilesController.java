@@ -43,7 +43,8 @@ public class MediaFilesController {
 
     @ApiOperation("上传媒资文件接口")
     @RequestMapping(value = "/upload/coursefile",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public UploadFileResultDto upload(@RequestPart("filedata")MultipartFile filedata) throws IOException {
+    public UploadFileResultDto upload(@RequestPart("filedata")MultipartFile filedata,
+                                      @RequestParam(value= "objectName",required=false) String objectName) throws IOException {
         Long companyId = 1232141425L;
 
         UploadFileParamsDto uploadFileParamsDto = new UploadFileParamsDto();
@@ -56,7 +57,7 @@ public class MediaFilesController {
         filedata.transferTo(tempFile);
 
         String localFilePath = tempFile.getAbsolutePath();
-        UploadFileResultDto upload = mediaFileService.upload(companyId, uploadFileParamsDto, localFilePath);
+        UploadFileResultDto upload = mediaFileService.upload(companyId, uploadFileParamsDto, localFilePath, objectName);
         return upload;
     }
 }

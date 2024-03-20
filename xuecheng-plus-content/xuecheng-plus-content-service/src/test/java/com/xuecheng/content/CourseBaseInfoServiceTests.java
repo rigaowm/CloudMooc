@@ -33,7 +33,7 @@ public class CourseBaseInfoServiceTests {
         QueryCourseParamsDto queryCourseParamsDto = new QueryCourseParamsDto();
         queryCourseParamsDto.setCourseName("java");
         queryCourseParamsDto.setAuditStatus("202004");
-        PageResult<CourseBase> courseBasePageResult = courseBaseInfoService.queryCourseBaseList(pageParams, queryCourseParamsDto);
+        PageResult<CourseBase> courseBasePageResult = courseBaseInfoService.queryCourseBaseList(null, pageParams, queryCourseParamsDto);
         System.out.println(courseBasePageResult);
 
     }

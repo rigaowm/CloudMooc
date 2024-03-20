@@ -3,6 +3,9 @@ package com.xuecheng.content.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.xuecheng.base.exception.CommonError;
 import com.xuecheng.base.exception.XueChengPlusException;
+import com.xuecheng.base.model.PageResult;
+import com.xuecheng.content.config.MultipartSupportConfig;
+import com.xuecheng.content.feignclient.MediaServiceClient;
 import com.xuecheng.content.mapper.CourseBaseMapper;
 import com.xuecheng.content.mapper.CourseMarketMapper;
 import com.xuecheng.content.mapper.CoursePublishMapper;
@@ -16,13 +19,24 @@ import com.xuecheng.content.service.CoursePublishService;
 import com.xuecheng.content.service.TeachplanService;
 import com.xuecheng.messagesdk.model.po.MqMessage;
 import com.xuecheng.messagesdk.service.MqMessageService;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -33,6 +47,7 @@ import java.util.List;
  * @Description:
  */
 
+@Slf4j
 @Service
 public class CoursePublishServiceImpl implements CoursePublishService {
     @Autowired
@@ -52,6 +67,13 @@ public class CoursePublishServiceImpl implements CoursePublishService {
 
     @Autowired
     private MqMessageService mqMessageService;
+
+    @Autowired
+    private MediaServiceClient mediaServiceClient;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @Override
     public CoursePreviewDto getCoursePreviewInfo(Long courseId) {
         CoursePreviewDto coursePreviewDto = new CoursePreviewDto();
@@ -138,6 +160,9 @@ public class CoursePublishServiceImpl implements CoursePublishService {
 
 
     }
+
+
+
     /**
      * @description 保存课程发布信息
      * @param courseId  课程id
@@ -185,6 +210,70 @@ public class CoursePublishServiceImpl implements CoursePublishService {
             XueChengPlusException.cast(CommonError.UNKOWN_ERROR);
         }
     }
+    @Override
+    public File generateCourseHtml(Long courseId) {
+        File htmlFile = null;
+        try {
+            Configuration configuration = new Configuration(Configuration.getVersion());
 
+            String path = this.getClass().getResource("/").getPath();
+            configuration.setDirectoryForTemplateLoading(new File(path+"/templates/"));
+            configuration.setDefaultEncoding("utf-8");
+
+            Template template = configuration.getTemplate("course_template.ftl");
+
+            CoursePreviewDto coursePreviewDto = this.getCoursePreviewInfo(courseId);
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("model",coursePreviewDto);
+            String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, map);
+
+            InputStream inputStream = IOUtils.toInputStream(html,"utf-8");
+            htmlFile = File.createTempFile("coursepublish",".html");
+            FileOutputStream fileOutputStream = new FileOutputStream(htmlFile);
+
+
+            IOUtils.copy(inputStream,fileOutputStream);
+        }catch (Exception e){
+            log.error("生成html页面错误,课程id：{}",courseId,e);
+            e.printStackTrace();
+        }
+
+        return htmlFile;
+    }
+
+    @Override
+    public void uploadCourseHtml(Long courseId, File file) {
+       try {
+           MultipartFile multipartFile = MultipartSupportConfig.getMultipartFile(file);
+           String upload = mediaServiceClient.upload(multipartFile, "course/"+courseId+".html");
+           if(upload == null){
+               System.out.println("走了降级逻辑");
+               XueChengPlusException.cast("上传静态文件过程中出现异常");
+           }
+       }catch (Exception e){
+           e.printStackTrace();
+           XueChengPlusException.cast("上传静态文件过程中出现异常");
+       }
+    }
+    @Override
+    public CoursePublish getCoursePublish(Long courseId){
+        CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
+        return coursePublish ;
+    }
+
+    @Override
+    public CoursePublish getCoursePublishCache(Long courseId) {
+        Object jsonObj = redisTemplate.opsForValue().get("course:" + courseId);
+        if(jsonObj!=null){
+            String jsonObjString = jsonObj.toString();
+            CoursePublish coursePublish = JSON.parseObject(jsonObjString, CoursePublish.class);
+            return coursePublish;
+        }
+        CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
+        if(coursePublish!=null){
+            redisTemplate.opsForValue().set("course:" + courseId,JSON.toJSONString(coursePublish));
+        }
+        return coursePublish;
+    }
 
 }

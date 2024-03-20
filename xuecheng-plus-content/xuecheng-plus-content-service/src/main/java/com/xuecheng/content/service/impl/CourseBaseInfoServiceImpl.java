@@ -45,13 +45,13 @@ public class CourseBaseInfoServiceImpl implements CourseBaseInfoService {
     @Autowired
     private TeachplanMapper teachplanMapper;
     @Override
-    public PageResult<CourseBase> queryCourseBaseList(PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
+    public PageResult<CourseBase> queryCourseBaseList(Long companyId, PageParams pageParams, QueryCourseParamsDto queryCourseParamsDto) {
 
         LambdaQueryWrapper<CourseBase> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(queryCourseParamsDto.getCourseName()),CourseBase::getName,queryCourseParamsDto.getCourseName());
         lambdaQueryWrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getAuditStatus()),CourseBase::getAuditStatus,queryCourseParamsDto.getAuditStatus());
         lambdaQueryWrapper.eq(StringUtils.isNotEmpty(queryCourseParamsDto.getPublishStatus()),CourseBase::getStatus,queryCourseParamsDto.getPublishStatus());
-
+        lambdaQueryWrapper.eq(companyId !=null,CourseBase::getCompanyId,companyId);
 
         Page<CourseBase> page = new Page<>(pageParams.getPageNo(),pageParams.getPageSize());
         courseBaseMapper.selectPage(page,lambdaQueryWrapper);
